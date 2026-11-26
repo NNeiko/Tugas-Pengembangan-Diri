@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dari Kanvas Piksel ke Arsitektur Logika — Catatan Belajar Aldi Alfariz</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans, Newsreader, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['Newsreader', 'Georgia', 'serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        editorial: {
+                            paper: '#FAF8F5',
+                            paperElevated: '#F2EFE9',
+                            ink: '#18181B',
+                            muted: '#57534E',
+                            accent: '#C85A32',
+                            rule: '#E5E0D8',
+                            slate: '#0F1115',
+                            slateElevated: '#161920',
+                            slateInk: '#E4E4E7',
+                            slateMuted: '#9CA3AF',
+                            slateAccent: '#F27D52',
+                            slateRule: '#262A34',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Subtle editorial paper texture */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 40;
+            opacity: 0.024;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Editorial Long-Form Prose Styling */
+        .article-prose p {
+            margin-bottom: 1.65rem;
+            line-height: 1.88;
+            font-size: 1.15rem;
+            letter-spacing: -0.004em;
+        }
+        @media (max-width: 640px) {
+            .article-prose p {
+                font-size: 1.05rem;
+                line-height: 1.8;
+            }
+        }
+
+        .article-prose h2 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1.65rem;
+            line-height: 1.28;
+            letter-spacing: -0.025em;
+            margin-top: 3.4rem;
+            margin-bottom: 1.25rem;
+            scroll-margin-top: 5.5rem;
+        }
+        @media (max-width: 640px) {
+            .article-prose h2 {
+                font-size: 1.38rem;
+                margin-top: 2.75rem;
+            }
+        }
+
+        .article-prose h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            line-height: 1.38;
+            letter-spacing: -0.015em;
+            margin-top: 2.15rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .article-prose blockquote {
+            border-left: 3px solid #C85A32;
+            padding: 0.45rem 0 0.45rem 1.45rem;
+            margin: 2.35rem 0;
+            font-family: 'Newsreader', Georgia, serif;
+            font-style: italic;
+            font-size: 1.26rem;
+            line-height: 1.64;
+        }
+        .dark .article-prose blockquote {
+            border-left-color: #F27D52;
+        }
+
+        /* Inline Technical Code Pill */
+        .article-prose code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84em;
+            padding: 0.16rem 0.42rem;
+            border-radius: 0.28rem;
+            background-color: rgba(200, 90, 50, 0.09);
+            color: #A6421E;
+        }
+        .dark .article-prose code:not(pre code) {
+            background-color: rgba(242, 125, 82, 0.14);
+            color: #F59E7C;
+        }
+
+        /* Editorial Drop Cap */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 3.8rem;
+            line-height: 0.84;
+            padding-top: 0.2rem;
+            padding-right: 0.8rem;
+            color: #C85A32;
+        }
+        .dark .drop-cap::first-letter {
+            color: #F27D52;
+        }
+
+        /* Syntax Highlighting Colors (Warm Light & Deep Slate Dark) */
+        .tok-kw { color: #B43E1A; font-weight: 500; }
+        .tok-type { color: #1E6B7B; font-weight: 500; }
+        .tok-fn { color: #6B46C1; }
+        .tok-str { color: #2B7A3D; }
+        .tok-num { color: #B75B00; }
+        .tok-cmt { color: #78716C; font-style: italic; }
+
+        .dark .tok-kw { color: #F58F6A; font-weight: 500; }
+        .dark .tok-type { color: #67C5D8; font-weight: 500; }
+        .dark .tok-fn { color: #C4A7F7; }
+        .dark .tok-str { color: #86D993; }
+        .dark .tok-num { color: #F6AD55; }
+        .dark .tok-cmt { color: #7C8496; font-style: italic; }
+
+        /* Gentle Scroll Reveal */
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal-item.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Active TOC Link */
+        .toc-link.active {
+            color: #C85A32;
+            font-weight: 600;
+        }
+        .dark .toc-link.active {
+            color: #F27D52;
+        }
+    </style>
+</head>
+<body class="bg-editorial-paper text-editorial-ink dark:bg-editorial-slate dark:text-editorial-slateInk transition-colors duration-300 antialiased selection:bg-editorial-accent/20 selection:text-editorial-accent dark:selection:bg-editorial-slateAccent/25 dark:selection:text-editorial-slateAccent">
+
+    <!-- Top Reading Progress Bar -->
+    <div class="fixed top-0 left-0 right-0 h-[3px] bg-transparent z-50 pointer-events-none">
+        <div id="reading-progress" class="h-full bg-editorial-accent dark:bg-editorial-slateAccent w-0 transition-all duration-100 ease-out"></div>
+    </div>
+
+    <!-- Minimal Sticky Navigation Header -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-editorial-paper/85 dark:bg-editorial-slate/85 border-b border-editorial-rule dark:border-editorial-slateRule transition-colors duration-300">
+        <div class="max-w-[1060px] mx-auto px-5 sm:px-8 py-3.5 flex items-center justify-between font-mono text-xs">
+            <a href="#" class="flex items-center space-x-2.5 tracking-tight group">
+                <span class="inline-block w-2.5 h-2.5 rounded-xs bg-editorial-accent dark:bg-editorial-slateAccent group-hover:rotate-45 transition-transform duration-300"></span>
+                <span class="font-semibold text-editorial-ink dark:text-editorial-slateInk">aldi.alfariz</span>
+                <span class="text-editorial-muted dark:text-editorial-slateMuted hidden sm:inline">/ learning-in-public</span>
+            </a>
+
+            <div class="flex items-center space-x-4 sm:space-x-5">
+                <span class="text-[11px] text-editorial-muted dark:text-editorial-slateMuted tracking-wide hidden md:inline">
+                    TUGAS PENGEMBANGAN DIRI · UTB
+                </span>
+                <button
+                    id="theme-toggle"
+                    type="button"
+                    aria-label="Ubah tema baca"
+                    class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md border border-editorial-rule dark:border-editorial-slateRule text-[11px] font-medium text-editorial-muted dark:text-editorial-slateMuted hover:border-editorial-accent dark:hover:border-editorial-slateAccent hover:text-editorial-ink dark:hover:text-editorial-slateInk transition"
+                >
+                    <svg id="icon-sun" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                    </svg>
+                    <svg id="icon-moon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span id="theme-label">Deep Slate</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Editorial Container -->
+    <main class="max-w-[1060px] mx-auto px-5 sm:px-8 pt-10 sm:pt-14 pb-24">
+
+        <!-- Editorial Masthead -->
+        <header class="max-w-[820px] pb-10 mb-10 sm:mb-14 border-b border-editorial-rule dark:border-editorial-slateRule">
+            <div class="flex flex-wrap items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-editorial-accent dark:text-editorial-slateAccent mb-5">
+                <span>LEARNING IN PUBLIC</span>
+                <span class="text-editorial-rule dark:text-editorial-slateRule">•</span>
+                <span class="text-editorial-muted dark:text-editorial-slateMuted">GAME DEVELOPMENT &amp; SOFTWARE ENGINEERING</span>
+            </div>
+
+            <h1 class="font-display font-extrabold text-3xl sm:text-[42px] lg:text-[46px] leading-[1.14] tracking-[-0.03em] mb-6">
+                Dari Kanvas Piksel ke Arsitektur Logika: Pelajaran Terbesar dari Kompetisi Game Jam dan Pengembangan Game
+            </h1>
+
+            <p class="font-serif italic text-xl sm:text-[22px] text-editorial-muted dark:text-editorial-slateMuted leading-relaxed mb-8">
+                Catatan perjalanan seorang mahasiswa Teknik Informatika yang berangkat dari kecintaan menggambar piksel, lalu belajar merancang struktur kode C# yang bersih di bawah tekanan tenggat waktu 48 hingga 72 jam.
+            </p>
+
+            <!-- Author & Academic Metadata Strip -->
+            <div class="pt-5 border-t border-dashed border-editorial-rule dark:border-editorial-slateRule flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs text-editorial-muted dark:text-editorial-slateMuted">
+                <div class="leading-relaxed">
+                    <span class="font-semibold text-editorial-ink dark:text-editorial-slateInk">Aldi Alfariz</span>
+                    <span class="text-editorial-accent dark:text-editorial-slateAccent ml-1">(NIM 24552011212)</span>
+                    <span class="mx-1.5 hidden sm:inline">|</span>
+                    <span class="block sm:inline">Mahasiswa Teknik Informatika (Semester 5) — Universitas Teknologi Bandung</span>
+                </div>
+                <div class="text-[11px] uppercase tracking-wider shrink-0 bg-editorial-paperElevated dark:bg-editorial-slateElevated px-2.5 py-1 rounded border border-editorial-rule dark:border-editorial-slateRule self-start sm:self-auto">
+                    Estimasi baca: 6 menit
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Collapsible Table of Contents -->
+        <details class="lg:hidden mb-10 rounded-lg bg-editorial-paperElevated/90 dark:bg-editorial-slateElevated/90 border border-editorial-rule dark:border-editorial-slateRule font-mono text-xs">
+            <summary class="px-4 py-3.5 cursor-pointer font-semibold uppercase tracking-wider text-editorial-ink dark:text-editorial-slateInk flex items-center justify-between select-none">
+                <span>Daftar Bab Cerita (01 – 05)</span>
+                <span class="text-editorial-accent dark:text-editorial-slateAccent text-[11px]">Ketuk untuk buka</span>
+            </summary>
+            <nav aria-label="Daftar Isi Mobile" class="px-4 pb-4 pt-1 border-t border-editorial-rule dark:border-editorial-slateRule">
+                <ol class="space-y-2.5 text-editorial-muted dark:text-editorial-slateMuted">
+                    <li><a href="#bab-1" class="block hover:text-editorial-accent dark:hover:text-editorial-slateAccent">01. Dari Kanvas Piksel ke Baris Logika</a></li>
+                    <li><a href="#bab-2" class="block hover:text-editorial-accent dark:hover:text-editorial-slateAccent">02. Tekanan 48–72 Jam di Arena Game Jam</a></li>
+                    <li><a href="#bab-3" class="block hover:text-editorial-accent dark:hover:text-editorial-slateAccent">03. Pelajaran Teknis &amp; Arsitektur C# Nyata</a></li>
+                    <li><a href="#bab-4" class="block hover:text-editorial-accent dark:hover:text-editorial-slateAccent">04. Refleksi Learning in Public &amp; Perkuliahan</a></li>
+                    <li><a href="#bab-5" class="block hover:text-editorial-accent dark:hover:text-editorial-slateAccent">05. Catatan Penutup untuk Sesama Mahasiswa TI</a></li>
+                </ol>
+            </nav>
+        </details>
+
+        <!-- Two-Column Layout on Desktop: Long-Form Narrative + Sticky Sidebar TOC -->
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,68ch)_240px] gap-12 xl:gap-16 items-start">
+
+            <!-- Primary Narrative Column -->
+            <article class="article-prose font-serif">
+
+                <!-- BAB 1: PENDAHULUAN -->
+                <section id="bab-1" class="reveal-item is-visible">
+                    <h2>01. Pendahuluan: Ketika Gambar yang Bagus Saja Ternyata Tidak Cukup</h2>
+
+                    <p class="drop-cap">
+                        Ketika pertama kali melangkah masuk sebagai mahasiswa Program Studi Teknik Informatika di <strong>Universitas Teknologi Bandung</strong>, bekal utama yang paling saya percaya diri bukanlah algoritma pengurutan atau struktur data pohon biner, melainkan ketekunan menggambar piksel demi piksel. Sejak awal perkuliahan, meja kerja digital saya lebih akrab dengan kanvas <strong>Aseprite</strong> dan <strong>Krita</strong>—merancang <em>sprite sheet</em> karakter 2D, menyusun palet warna atmosferik, hingga memodelkan aset 3D sederhana.
+                    </p>
+
+                    <p>
+                        Pada fase awal itu, saya sempat memandang pengembangan game dari kacamata seorang seniman visual: selama animasi berjalan karakter terlihat halus dan pencahayaan latar belakangnya memikat, separuh pekerjaan sudah selesai. Namun, anggapan tersebut runtuh begitu saya mulai memindahkan aset-aset visual itu ke dalam <em>game engine</em> seperti <strong>Unity</strong>.
+                    </p>
+
+                    <p>
+                        Sebuah karakter <em>pixel art</em> yang digambar selama delapan jam tetap hanyalah sekumpulan piksel mati di layar jika tidak ditopang oleh sistem deteksi tumbukan (<em>collision</em>) yang presisi, mesin status animasi (<em>state machine</em>) yang responsif, serta arsitektur kode yang mampu menangani masukan pemain tanpa jeda. Di titik itulah saya menyadari bahwa di balik setiap pengalaman bermain yang terasa mulus, berdiri fondasi rekayasa perangkat lunak yang disiplin.
+                    </p>
+                </section>
+
+                <!-- BAB 2: TEKANAN 48-72 JAM DI GAME JAM -->
+                <section id="bab-2" class="reveal-item">
+                    <h2>02. Tekanan 48–72 Jam di Arena Game Jam</h2>
+
+                    <p>
+                        Kesadaran teoretis di ruang kuliah berubah menjadi ujian nyali yang sesungguhnya ketika saya mulai terjun ke kompetisi <strong>Game Jam</strong> tingkat nasional—salah satunya saat membangun <em>game</em> bertema literasi keuangan dalam ajang <strong>Zoud GameLab FinLit Jam</strong> bersama tim. Dalam format kompetisi yang membatasi waktu pengerjaan hanya 48 hingga 72 jam dari pengumuman tema hingga pengumpulan <em>build</em> akhir, tidak ada ruang bagi perfeksionisme yang berlarut-larut.
+                    </p>
+
+                    <p>
+                        Di jam-jam pertama, antusiasme tim biasanya meluap-luap: kami ingin memasukkan puluhan mekanik, sistem dialog bercabang, hingga puluhan variasi aset visual. Namun memasuki jam ke-24, realitas waktu mulai menampar. Saya belajar secara langsung bahwa musuh terbesar dalam <em>Game Jam</em> bukanlah kurangnya ide, melainkan kegagalan mengelola ruang lingkup (<strong>scope management</strong>).
+                    </p>
+
+                    <blockquote>
+                        &ldquo;Di arena Game Jam, satu mekanik inti yang selesai, stabil, dan menyenangkan untuk dimainkan jauh lebih berharga daripada sepuluh fitur ambisius yang masih rusak sepuluh menit sebelum tenggat pengumpulan.&rdquo;
+                    </blockquote>
+
+                    <p>
+                        Pengalaman ini juga melatih kecepatan komunikasi lintas peran. Karena saya memahami alur kerja artistik sekaligus logika pemrograman, saya belajar menerjemahkan kebutuhan teknis secara pragmatis: kapan sebuah animasi cukup menggunakan empat <em>frame</em> kunci alih-alih dua belas, kapan efek visual bisa diselesaikan lewat interpolasi kode (<em>tweening</em>) daripada menggambar ulang aset, dan bagaimana menjaga agar <em>playable build</em> selalu siap diuji kapan saja.
+                    </p>
+                </section>
+
+                <!-- BAB 3: PELAJARAN TEKNIS & PEMROGRAMAN NYATA -->
+                <section id="bab-3" class="reveal-item">
+                    <h2>03. Pelajaran Teknis &amp; Arsitektur Pemrograman Nyata</h2>
+
+                    <p>
+                        Dari beberapa siklus pengembangan game dan kompetisi yang saya jalani, ada tiga pelajaran rekayasa perangkat lunak yang paling membekas dan mengubah cara saya menulis kode hingga hari ini.
+                    </p>
+
+                    <h3>A. Meninggalkan Skrip &ldquo;Spaghetti&rdquo; Menuju Arsitektur Modular (Decoupling)</h3>
+                    <p>
+                        Pada proyek-proyek pertama di Unity, saya melakukan kesalahan klasik pemula: menumpuk hampir seluruh logika permainan—mulai dari input gerak pemain, perhitungan gravitasi, pengecekan inventori, hingga perilaku musuh—ke dalam satu kelas besar dengan metode <code>Update()</code> yang membengkak ratusan baris. Akibatnya, mengubah satu variabel kecepatan lari saja bisa memicu bug pada sistem deteksi suara musuh.
+                    </p>
+
+                    <p>
+                        Saat mengembangkan mekanik <em>stealth</em> berbasis pendengaran AI dan sistem manajemen status pemain, saya mulai menerapkan prinsip <strong>pemisahan tanggung jawab (decoupling)</strong> menggunakan <em>Interface</em> dan <em>C# Events</em>. Alih-alih membuat skrip pergerakan pemain saling terikat erat dengan skrip penjaga AI, pemain cukup memancarkan sinyal suara (<code>ISoundEmitter</code>) pada radius tertentu, sementara komponen pendengaran AI hanya mendengarkan sinyal tersebut secara independen.
+                    </p>
+
+                    <!-- Interactive C# Code Evolution Comparison Block -->
+                    <div class="my-8 rounded-xl border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated dark:bg-editorial-slateElevated overflow-hidden font-sans">
+                        <div class="px-4 sm:px-5 py-3.5 border-b border-editorial-rule dark:border-editorial-slateRule flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/[0.02] dark:bg-white/[0.02]">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-mono text-[11px] font-semibold text-editorial-ink dark:text-editorial-slateInk" id="code-filename">
+                                    StealthAudioSystem.cs — Pendekatan Modular (Event &amp; Interface)
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-2 font-mono text-[11px]">
+                                <!-- Toggle between Modular vs Spaghetti -->
+                                <div class="inline-flex rounded-md p-0.5 bg-editorial-paper dark:bg-editorial-slate border border-editorial-rule dark:border-editorial-slateRule">
+                                    <button
+                                        type="button"
+                                        id="tab-modular"
+                                        onclick="switchCodeTab('modular')"
+                                        class="px-2.5 py-1 rounded font-medium transition bg-editorial-accent text-white dark:bg-editorial-slateAccent dark:text-editorial-slate"
+                                    >
+                                        Modular (Sesudah)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="tab-spaghetti"
+                                        onclick="switchCodeTab('spaghetti')"
+                                        class="px-2.5 py-1 rounded font-medium transition text-editorial-muted dark:text-editorial-slateMuted hover:text-editorial-ink dark:hover:text-editorial-slateInk"
+                                    >
+                                        Spaghetti (Sebelum)
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onclick="copyActiveCode(this)"
+                                    class="px-2.5 py-1 rounded border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paper dark:bg-editorial-slate text-editorial-ink dark:text-editorial-slateInk hover:border-editorial-accent dark:hover:border-editorial-slateAccent transition"
+                                >
+                                    Salin Kode
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modular C# Snippet -->
+                        <pre id="code-modular" class="p-4 sm:p-5 overflow-x-auto font-mono text-[12px] leading-relaxed text-editorial-ink/95 dark:text-editorial-slateInk/95"><code><span class="tok-kw">using</span> System;
+<span class="tok-kw">using</span> UnityEngine;
+
+<span class="tok-cmt">// 1. Kontrak antarmuka agar sumber suara tidak perlu tahu siapa pendengarnya</span>
+<span class="tok-kw">public interface</span> <span class="tok-type">INoiseListener</span>
+{
+    <span class="tok-kw">void</span> <span class="tok-fn">OnNoiseHeard</span>(<span class="tok-type">Vector2</span> sourcePosition, <span class="tok-kw">float</span> intensity);
+}
+
+<span class="tok-cmt">// 2. Komponen kaki pemain hanya bertugas memancarkan radius suara langkah</span>
+<span class="tok-kw">public class</span> <span class="tok-type">FootstepNoiseEmitter</span> : <span class="tok-type">MonoBehaviour</span>
+{
+    [<span class="tok-type">SerializeField</span>] <span class="tok-kw">private</span> <span class="tok-type">LayerMask</span> listenerLayer;
+    <span class="tok-kw">private readonly</span> <span class="tok-type">Collider2D</span>[] _hitBuffer = <span class="tok-kw">new</span> <span class="tok-type">Collider2D</span>[<span class="tok-num">8</span>];
+
+    <span class="tok-kw">public void</span> <span class="tok-fn">EmitFootstep</span>(<span class="tok-kw">float</span> radius, <span class="tok-kw">float</span> intensity)
+    {
+        <span class="tok-cmt">// Menggunakan NonAlloc untuk mencegah lonjakan Garbage Collection di Update</span>
+        <span class="tok-kw">int</span> count = <span class="tok-type">Physics2D</span>.<span class="tok-fn">OverlapCircleNonAlloc</span>(transform.position, radius, _hitBuffer, listenerLayer);
+        <span class="tok-kw">for</span> (<span class="tok-kw">int</span> i = <span class="tok-num">0</span>; i &lt; count; i++)
+        {
+            <span class="tok-kw">if</span> (_hitBuffer[i].<span class="tok-fn">TryGetComponent</span>&lt;<span class="tok-type">INoiseListener</span>&gt;(<span class="tok-kw">out var</span> listener))
+            {
+                listener.<span class="tok-fn">OnNoiseHeard</span>(transform.position, intensity);
+            }
+        }
+    }
+}</code></pre>
+
+                        <!-- Spaghetti C# Snippet (Hidden by default) -->
+                        <pre id="code-spaghetti" class="hidden p-4 sm:p-5 overflow-x-auto font-mono text-[12px] leading-relaxed text-editorial-ink/95 dark:text-editorial-slateInk/95"><code><span class="tok-kw">using</span> UnityEngine;
+
+<span class="tok-cmt">// ANTI-PATTERN: Semua logika gerak, animasi, dan AI terikat langsung di satu kelas</span>
+<span class="tok-kw">public class</span> <span class="tok-type">PlayerAllInOne</span> : <span class="tok-type">MonoBehaviour</span>
+{
+    <span class="tok-kw">public</span> <span class="tok-type">GuardAI</span>[] allGuardsInScene; <span class="tok-cmt">// Harus di-drag manual setiap tambah musuh!</span>
+    <span class="tok-kw">public</span> <span class="tok-type">InventoryUI</span> inventoryUI;
+    <span class="tok-kw">public float</span> moveSpeed = <span class="tok-num">5f</span>;
+
+    <span class="tok-kw">private void</span> <span class="tok-fn">Update</span>()
+    {
+        <span class="tok-kw">float</span> moveX = <span class="tok-type">Input</span>.<span class="tok-fn">GetAxisRaw</span>(<span class="tok-str">"Horizontal"</span>);
+        transform.position += <span class="tok-kw">new</span> <span class="tok-type">Vector3</span>(moveX * moveSpeed * <span class="tok-type">Time</span>.deltaTime, <span class="tok-num">0f</span>, <span class="tok-num">0f</span>);
+
+        <span class="tok-cmt">// Mengecek jarak setiap musuh di setiap frame (sulit di-debug &amp; boros memori)</span>
+        <span class="tok-kw">if</span> (Mathf.<span class="tok-fn">Abs</span>(moveX) &gt; <span class="tok-num">0.1f</span>)
+        {
+            <span class="tok-kw">foreach</span> (<span class="tok-kw">var</span> guard <span class="tok-kw">in</span> allGuardsInScene)
+            {
+                <span class="tok-kw">if</span> (<span class="tok-type">Vector2</span>.<span class="tok-fn">Distance</span>(transform.position, guard.transform.position) &lt; <span class="tok-num">6f</span>)
+                {
+                    guard.isAlerted = <span class="tok-kw">true</span>;
+                    guard.targetPosition = transform.position;
+                }
+            }
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>B. Disiplin GDD &amp; Architecture Design Document Sebelum Menulis Kode</h3>
+                    <p>
+                        Pelajaran berikutnya datang dari pengalaman mengikuti program studi independen <em>Game Development</em> serta tanggung jawab menyusun materi kurikulum di <strong>Divisi Game UKM OXIGEN</strong> kampus. Ketika harus membimbing rekan-rekan mahasiswa lain membangun game dari nol, saya menyadari bahwa langsung membuka editor kode tanpa rancangan tertulis adalah resep kekacauan.
+                    </p>
+
+                    <p>
+                        Penyusunan <strong>Game Design Document (GDD)</strong> dan <strong>Architecture Design Document (ADD)</strong>—meski hanya dua atau tiga halaman ringkas—membantu memetakan alur status permainan (<em>game loop</em>), relasi antar kelas, serta daftar aset yang benar-benar dibutuhkan sebelum satu baris kode pun ditulis.
+                    </p>
+
+                    <h3>C. Debugging Pragmatis dan Kontrol Versi Git di Bawah Tekanan</h3>
+                    <p>
+                        Tidak ada proyek game yang luput dari bug menjelang tenggat waktu: mulai dari karakter yang tersangkut di sudut <em>tilemap collider</em>, <em>shader</em> material yang berubah menjadi ungu saat berpindah templat render, hingga konflik <em>scene file</em> pada <strong>Git</strong>. Dari sini saya belajar membiasakan disiplin <em>atomic commit</em> per fitur kecil serta memanfaatkan cabang (<em>branch</em>) terpisah antara eksperimen mekanik dan integrasi aset visual, sehingga versi stabil selalu terlindungi ketika terjadi kesalahan fatal.
+                    </p>
+
+                    <!-- Integrated Key Takeaways Callout Box -->
+                    <aside class="my-9 p-5 sm:p-6 rounded-xl border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated/90 dark:bg-editorial-slateElevated/90 font-sans">
+                        <div class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em] text-editorial-accent dark:text-editorial-slateAccent mb-3">
+                            <span class="inline-block w-2 h-2 rounded-full bg-editorial-accent dark:bg-editorial-slateAccent"></span>
+                            <span>Key Takeaways · Rangkuman Pelajaran Teknis</span>
+                        </div>
+                        <ul class="space-y-3 text-sm sm:text-[15px] leading-relaxed text-editorial-ink/90 dark:text-editorial-slateInk/90">
+                            <li class="flex items-start gap-2.5">
+                                <span class="font-mono text-xs text-editorial-accent dark:text-editorial-slateAccent mt-1">01.</span>
+                                <span><strong>Scope Management adalah Kunci Kelulusan Proyek:</strong> Memangkas fitur sekunder sejak hari pertama memastikan inti permainan selesai utuh dan teruji.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <span class="font-mono text-xs text-editorial-accent dark:text-editorial-slateAccent mt-1">02.</span>
+                                <span><strong>Decoupling Mencegah Efek Domino Bug:</strong> Memisahkan sistem lewat <em>Interface</em> dan <em>Events</em> membuat kode mudah dimodifikasi tanpa merusak modul lain.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <span class="font-mono text-xs text-editorial-accent dark:text-editorial-slateAccent mt-1">03.</span>
+                                <span><strong>GDD/ADD Ringkas Menghemat Jam Debugging:</strong> Satu jam merancang arsitektur di atas kertas mampu menghemat sepuluh jam merombak kode di tengah jalan.</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <span class="font-mono text-xs text-editorial-accent dark:text-editorial-slateAccent mt-1">04.</span>
+                                <span><strong>Git Discipline pada Aset Biner &amp; Scene:</strong> Pembagian tanggung jawab prefab dan <em>commit</em> terstruktur mencegah konflik saat bekerja dalam tim lintas peran.</span>
+                            </li>
+                        </ul>
+                    </aside>
+                </section>
+
+                <!-- BAB 4: REFLEKSI LEARNING IN PUBLIC & DAMPAK KE PERKULIAHAN -->
+                <section id="bab-4" class="reveal-item">
+                    <h2>04. Refleksi &ldquo;Learning in Public&rdquo; &amp; Dampaknya ke Perkuliahan</h2>
+
+                    <p>
+                        Hal paling menarik yang saya rasakan setelah rutin membangun game adalah bagaimana konsep-konsep abstrak di ruang kuliah Teknik Informatika tiba-tiba menemukan wujud nyatanya. Mata kuliah <strong>Pemrograman Berorientasi Objek (PBO)</strong> tidak lagi terasa sekadar latihan membuat kelas <code>Hewan</code> atau <code>Kendaraan</code>, melainkan menjadi alat nyata untuk merancang hierarki entitas dan perilaku senjata dalam game.
+                    </p>
+
+                    <p>
+                        Begitu pula dengan <strong>Struktur Data dan Algoritma</strong>: memilih antara <code>List</code>, <code>Dictionary</code>, atau <em>Object Pooling</em> berdampak langsung pada kestabilan <em>frame rate</em> saat puluhan proyektil muncul bersamaan. Konsep <strong>Kecerdasan Buatan (AI)</strong> pun terasa hidup ketika saya mengimplementasikan <em>Finite State Machine</em> dan pencarian jalur (<em>pathfinding</em>) bagi agen musuh agar dapat berpatroli dan mengejar pemain secara alami.
+                    </p>
+
+                    <p>
+                        Bagi saya, mempraktikkan <strong>learning in public</strong>—dengan mendokumentasikan catatan pengembangan, membagikan proses pembuatan aset maupun arsitektur kode, serta menyusun modul ajar bagi mahasiswa lain—bukanlah ajang untuk memamerkan hasil akhir yang tampak sempurna. Justru sebaliknya, ini adalah cara paling jujur untuk merawat akuntabilitas diri: memaksa saya memahami suatu konsep cukup dalam hingga mampu menjelaskannya kembali dengan bahasa yang jernih dan bermanfaat bagi orang lain.
+                    </p>
+                </section>
+
+                <!-- BAB 5: PENUTUP -->
+                <section id="bab-5" class="reveal-item">
+                    <h2>05. Penutup: Menjembatani Rasa Ingin Tahu dan Disiplin Rekayasa</h2>
+
+                    <p>
+                        Perjalanan dari sekadar menggambar piksel di kanvas 2D hingga merancang arsitektur kode C# yang terstruktur mengajarkan saya bahwa identitas seorang pembelajar di bidang teknologi tidak harus terkotak-kotak. Kepekaan visual membantu saya merancang pengalaman pengguna yang manusiawi, sementara disiplin rekayasa perangkat lunak memberi saya alat untuk mewujudkan ide tersebut menjadi sistem yang andal.
+                    </p>
+
+                    <p>
+                        Untuk rekan-rekan sesama mahasiswa Teknik Informatika yang mungkin masih ragu memulai proyek di luar tugas rutin kelas: mulailah dari ruang lingkup sekecil mungkin, ikuti satu kompetisi atau bangun satu prototipe nyata, lalu tuliskan apa yang Anda pelajari darinya—termasuk setiap kesalahan yang Anda temui di sepanjang jalan. Sebab sering kali, kemajuan terbesar kita justru lahir dari catatan jujur tentang bagaimana kita bangkit dari kode yang sempat gagal berjalan.
+                    </p>
+                </section>
+
+                <!-- Clean Editorial Author & Share Footer -->
+                <footer class="mt-16 pt-9 border-t border-editorial-rule dark:border-editorial-slateRule">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        <div>
+                            <div class="font-mono text-[11px] uppercase tracking-[0.14em] text-editorial-accent dark:text-editorial-slateAccent mb-1.5">
+                                PROFIL PENULIS &amp; DOKUMENTASI AKADEMIK
+                            </div>
+                            <p class="font-display font-bold text-lg text-editorial-ink dark:text-editorial-slateInk">
+                                Aldi Alfariz — NIM 24552011212
+                            </p>
+                            <p class="font-serif text-sm text-editorial-muted dark:text-editorial-slateMuted mt-0.5">
+                                Mahasiswa Teknik Informatika (Semester 5) · Universitas Teknologi Bandung · Mata Kuliah Pengembangan Diri
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-3 font-mono text-xs shrink-0">
+                            <button
+                                type="button"
+                                onclick="copyArticleLink()"
+                                class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated dark:bg-editorial-slateElevated text-editorial-ink dark:text-editorial-slateInk hover:border-editorial-accent dark:hover:border-editorial-slateAccent transition"
+                            >
+                                <svg class="w-3.5 h-3.5 text-editorial-accent dark:text-editorial-slateAccent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                <span>Salin Tautan Artikel</span>
+                            </button>
+                        </div>
+                    </div>
+                </footer>
+            </article>
+
+            <!-- Desktop Sticky Table of Contents Sidebar -->
+            <aside class="hidden lg:block sticky top-24 font-mono text-xs">
+                <div class="p-5 rounded-xl border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated/70 dark:bg-editorial-slateElevated/70">
+                    <div class="text-[10px] uppercase tracking-[0.15em] text-editorial-muted dark:text-editorial-slateMuted mb-3.5 pb-2.5 border-b border-editorial-rule dark:border-editorial-slateRule">
+                        Navigasi Bab Cerita
+                    </div>
+                    <nav aria-label="Daftar Isi Desktop">
+                        <ul class="space-y-3 text-[11.5px] leading-snug text-editorial-muted dark:text-editorial-slateMuted">
+                            <li>
+                                <a href="#bab-1" data-target="bab-1" class="toc-link block hover:text-editorial-ink dark:hover:text-editorial-slateInk transition">
+                                    01. Kanvas Piksel ke Logika
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bab-2" data-target="bab-2" class="toc-link block hover:text-editorial-ink dark:hover:text-editorial-slateInk transition">
+                                    02. Tekanan 48–72 Jam Game Jam
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bab-3" data-target="bab-3" class="toc-link block hover:text-editorial-ink dark:hover:text-editorial-slateInk transition">
+                                    03. Arsitektur C# &amp; GDD/ADD
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bab-4" data-target="bab-4" class="toc-link block hover:text-editorial-ink dark:hover:text-editorial-slateInk transition">
+                                    04. Refleksi Learning in Public
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#bab-5" data-target="bab-5" class="toc-link block hover:text-editorial-ink dark:hover:text-editorial-slateInk transition">
+                                    05. Catatan Penutup
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div class="mt-5 pt-4 border-t border-editorial-rule dark:border-editorial-slateRule text-[11px] text-editorial-muted dark:text-editorial-slateMuted space-y-1">
+                        <div class="font-semibold text-editorial-ink dark:text-editorial-slateInk">Progres Membaca</div>
+                        <div id="sidebar-percent" class="text-editorial-accent dark:text-editorial-slateAccent font-semibold">0% selesai</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Non-intrusive Toast Notification -->
+    <div id="toast-banner" class="fixed bottom-6 right-6 px-4 py-2.5 rounded-lg border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated dark:bg-editorial-slateElevated text-editorial-ink dark:text-editorial-slateInk font-mono text-[11px] uppercase tracking-wider shadow-md opacity-0 pointer-events-none transition-opacity duration-200 z-50">
+        Berhasil disalin ke papan klip
+    </div>
+
+    <script>
+        // 1. Reading Progress Bar & Sidebar Percentage
+        const progressBar = document.getElementById('reading-progress');
+        const sidebarPercent = document.getElementById('sidebar-percent');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const rawProgress = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
+            const clamped = Math.min(Math.max(rawProgress, 0), 100);
+            progressBar.style.width = `${clamped}%`;
+            if (sidebarPercent) {
+                sidebarPercent.textContent = `${Math.round(clamped)}% selesai`;
+            }
+        }, { passive: true });
+
+        // 2. Editorial Theme Switcher (Warm Editorial Paper vs Deep Slate Studio)
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeLabel = document.getElementById('theme-label');
+        const iconSun = document.getElementById('icon-sun');
+        const iconMoon = document.getElementById('icon-moon');
+        const htmlEl = document.documentElement;
+
+        function updateThemeUI() {
+            const isDark = htmlEl.classList.contains('dark');
+            themeLabel.textContent = isDark ? 'Warm Paper' : 'Deep Slate';
+            iconSun.classList.toggle('hidden', !isDark);
+            iconMoon.classList.toggle('hidden', isDark);
+        }
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            htmlEl.classList.add('dark');
+        }
+        updateThemeUI();
+
+        themeToggle.addEventListener('click', () => {
+            htmlEl.classList.toggle('dark');
+            updateThemeUI();
+        });
+
+        // 3. Interactive C# Code Evolution Tab Switcher
+        let activeCodeMode = 'modular';
+
+        function switchCodeTab(mode) {
+            activeCodeMode = mode;
+            const modularPre = document.getElementById('code-modular');
+            const spaghettiPre = document.getElementById('code-spaghetti');
+            const tabModular = document.getElementById('tab-modular');
+            const tabSpaghetti = document.getElementById('tab-spaghetti');
+            const filenameEl = document.getElementById('code-filename');
+
+            const activeClasses = ['bg-editorial-accent', 'text-white', 'dark:bg-editorial-slateAccent', 'dark:text-editorial-slate'];
+            const inactiveClasses = ['text-editorial-muted', 'dark:text-editorial-slateMuted', 'hover:text-editorial-ink', 'dark:hover:text-editorial-slateInk'];
+
+            if (mode === 'modular') {
+                modularPre.classList.remove('hidden');
+                spaghettiPre.classList.add('hidden');
+                tabModular.classList.add(...activeClasses);
+                tabModular.classList.remove(...inactiveClasses);
+                tabSpaghetti.classList.remove(...activeClasses);
+                tabSpaghetti.classList.add(...inactiveClasses);
+                filenameEl.textContent = 'StealthAudioSystem.cs — Pendekatan Modular (Event & Interface)';
+            } else {
+                spaghettiPre.classList.remove('hidden');
+                modularPre.classList.add('hidden');
+                tabSpaghetti.classList.add(...activeClasses);
+                tabSpaghetti.classList.remove(...inactiveClasses);
+                tabModular.classList.remove(...activeClasses);
+                tabModular.classList.add(...inactiveClasses);
+                filenameEl.textContent = 'PlayerAllInOne.cs — Pendekatan Awal (Tightly Coupled)';
+            }
+        }
+
+        // 4. iFrame-Safe Clipboard Utilities
+        function showToast(message) {
+            const toast = document.getElementById('toast-banner');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2200);
+        }
+
+        function copyTextFallback(text) {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        function copyActiveCode(buttonEl) {
+            const targetId = activeCodeMode === 'modular' ? 'code-modular' : 'code-spaghetti';
+            const codeEl = document.getElementById(targetId);
+            if (!codeEl) return;
+
+            copyTextFallback(codeEl.innerText);
+            const originalText = buttonEl.textContent;
+            buttonEl.textContent = 'Tersalin!';
+            showToast('Cuplikan kode C# berhasil disalin');
+            setTimeout(() => {
+                buttonEl.textContent = originalText;
+            }, 1800);
+        }
+
+        function copyArticleLink() {
+            copyTextFallback(window.location.href);
+            showToast('Tautan artikel berhasil disalin');
+        }
+
+        // 5. Scroll Reveal & Active Sidebar TOC Highlight
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc-link');
+
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    const id = entry.target.getAttribute('id');
+                    tocLinks.forEach(link => {
+                        link.classList.toggle('active', link.dataset.target === id);
+                    });
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '-10% 0px -45% 0px'
+        });
+
+        sections.forEach(sec => sectionObserver.observe(sec));
+    </script>
+</body>
+</html>
