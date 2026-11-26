@@ -4,174 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dari Kanvas Piksel ke Arsitektur Logika — Catatan Belajar Aldi Alfariz</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/tailwind.config.js"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/app.js" defer></script>
     <!-- Google Fonts: Plus Jakarta Sans, Newsreader, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        display: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        serif: ['Newsreader', 'Georgia', 'serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    },
-                    colors: {
-                        editorial: {
-                            paper: '#FAF8F5',
-                            paperElevated: '#F2EFE9',
-                            ink: '#18181B',
-                            muted: '#57534E',
-                            accent: '#C85A32',
-                            rule: '#E5E0D8',
-                            slate: '#0F1115',
-                            slateElevated: '#161920',
-                            slateInk: '#E4E4E7',
-                            slateMuted: '#9CA3AF',
-                            slateAccent: '#F27D52',
-                            slateRule: '#262A34',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        /* Subtle editorial paper texture */
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 40;
-            opacity: 0.024;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-        }
-
-        /* Editorial Long-Form Prose Styling */
-        .article-prose p {
-            margin-bottom: 1.65rem;
-            line-height: 1.88;
-            font-size: 1.15rem;
-            letter-spacing: -0.004em;
-        }
-        @media (max-width: 640px) {
-            .article-prose p {
-                font-size: 1.05rem;
-                line-height: 1.8;
-            }
-        }
-
-        .article-prose h2 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 700;
-            font-size: 1.65rem;
-            line-height: 1.28;
-            letter-spacing: -0.025em;
-            margin-top: 3.4rem;
-            margin-bottom: 1.25rem;
-            scroll-margin-top: 5.5rem;
-        }
-        @media (max-width: 640px) {
-            .article-prose h2 {
-                font-size: 1.38rem;
-                margin-top: 2.75rem;
-            }
-        }
-
-        .article-prose h3 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 600;
-            font-size: 1.2rem;
-            line-height: 1.38;
-            letter-spacing: -0.015em;
-            margin-top: 2.15rem;
-            margin-bottom: 0.85rem;
-        }
-
-        .article-prose blockquote {
-            border-left: 3px solid #C85A32;
-            padding: 0.45rem 0 0.45rem 1.45rem;
-            margin: 2.35rem 0;
-            font-family: 'Newsreader', Georgia, serif;
-            font-style: italic;
-            font-size: 1.26rem;
-            line-height: 1.64;
-        }
-        .dark .article-prose blockquote {
-            border-left-color: #F27D52;
-        }
-
-        /* Inline Technical Code Pill */
-        .article-prose code:not(pre code) {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.84em;
-            padding: 0.16rem 0.42rem;
-            border-radius: 0.28rem;
-            background-color: rgba(200, 90, 50, 0.09);
-            color: #A6421E;
-        }
-        .dark .article-prose code:not(pre code) {
-            background-color: rgba(242, 125, 82, 0.14);
-            color: #F59E7C;
-        }
-
-        /* Editorial Drop Cap */
-        .drop-cap::first-letter {
-            float: left;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            font-size: 3.8rem;
-            line-height: 0.84;
-            padding-top: 0.2rem;
-            padding-right: 0.8rem;
-            color: #C85A32;
-        }
-        .dark .drop-cap::first-letter {
-            color: #F27D52;
-        }
-
-        /* Syntax Highlighting Colors (Warm Light & Deep Slate Dark) */
-        .tok-kw { color: #B43E1A; font-weight: 500; }
-        .tok-type { color: #1E6B7B; font-weight: 500; }
-        .tok-fn { color: #6B46C1; }
-        .tok-str { color: #2B7A3D; }
-        .tok-num { color: #B75B00; }
-        .tok-cmt { color: #78716C; font-style: italic; }
-
-        .dark .tok-kw { color: #F58F6A; font-weight: 500; }
-        .dark .tok-type { color: #67C5D8; font-weight: 500; }
-        .dark .tok-fn { color: #C4A7F7; }
-        .dark .tok-str { color: #86D993; }
-        .dark .tok-num { color: #F6AD55; }
-        .dark .tok-cmt { color: #7C8496; font-style: italic; }
-
-        /* Gentle Scroll Reveal */
-        .reveal-item {
-            opacity: 0;
-            transform: translateY(14px);
-            transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .reveal-item.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Active TOC Link */
-        .toc-link.active {
-            color: #C85A32;
-            font-weight: 600;
-        }
-        .dark .toc-link.active {
-            color: #F27D52;
-        }
-    </style>
 </head>
 <body class="bg-editorial-paper text-editorial-ink dark:bg-editorial-slate dark:text-editorial-slateInk transition-colors duration-300 antialiased selection:bg-editorial-accent/20 selection:text-editorial-accent dark:selection:bg-editorial-slateAccent/25 dark:selection:text-editorial-slateAccent">
 
@@ -338,7 +180,7 @@
                                     <button
                                         type="button"
                                         id="tab-modular"
-                                        onclick="switchCodeTab('modular')"
+                                        data-code-mode="modular"
                                         class="px-2.5 py-1 rounded font-medium transition bg-editorial-accent text-white dark:bg-editorial-slateAccent dark:text-editorial-slate"
                                     >
                                         Modular (Sesudah)
@@ -346,7 +188,7 @@
                                     <button
                                         type="button"
                                         id="tab-spaghetti"
-                                        onclick="switchCodeTab('spaghetti')"
+                                        data-code-mode="spaghetti"
                                         class="px-2.5 py-1 rounded font-medium transition text-editorial-muted dark:text-editorial-slateMuted hover:text-editorial-ink dark:hover:text-editorial-slateInk"
                                     >
                                         Spaghetti (Sebelum)
@@ -355,7 +197,7 @@
 
                                 <button
                                     type="button"
-                                    onclick="copyActiveCode(this)"
+                                    id="copy-code"
                                     class="px-2.5 py-1 rounded border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paper dark:bg-editorial-slate text-editorial-ink dark:text-editorial-slateInk hover:border-editorial-accent dark:hover:border-editorial-slateAccent transition"
                                 >
                                     Salin Kode
@@ -513,7 +355,7 @@
                         <div class="flex items-center gap-3 font-mono text-xs shrink-0">
                             <button
                                 type="button"
-                                onclick="copyArticleLink()"
+                                id="copy-article-link"
                                 class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg border border-editorial-rule dark:border-editorial-slateRule bg-editorial-paperElevated dark:bg-editorial-slateElevated text-editorial-ink dark:text-editorial-slateInk hover:border-editorial-accent dark:hover:border-editorial-slateAccent transition"
                             >
                                 <svg class="w-3.5 h-3.5 text-editorial-accent dark:text-editorial-slateAccent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -577,139 +419,5 @@
         Berhasil disalin ke papan klip
     </div>
 
-    <script>
-        // 1. Reading Progress Bar & Sidebar Percentage
-        const progressBar = document.getElementById('reading-progress');
-        const sidebarPercent = document.getElementById('sidebar-percent');
-
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.scrollY;
-            const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const rawProgress = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
-            const clamped = Math.min(Math.max(rawProgress, 0), 100);
-            progressBar.style.width = `${clamped}%`;
-            if (sidebarPercent) {
-                sidebarPercent.textContent = `${Math.round(clamped)}% selesai`;
-            }
-        }, { passive: true });
-
-        // 2. Editorial Theme Switcher (Warm Editorial Paper vs Deep Slate Studio)
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeLabel = document.getElementById('theme-label');
-        const iconSun = document.getElementById('icon-sun');
-        const iconMoon = document.getElementById('icon-moon');
-        const htmlEl = document.documentElement;
-
-        function updateThemeUI() {
-            const isDark = htmlEl.classList.contains('dark');
-            themeLabel.textContent = isDark ? 'Warm Paper' : 'Deep Slate';
-            iconSun.classList.toggle('hidden', !isDark);
-            iconMoon.classList.toggle('hidden', isDark);
-        }
-
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            htmlEl.classList.add('dark');
-        }
-        updateThemeUI();
-
-        themeToggle.addEventListener('click', () => {
-            htmlEl.classList.toggle('dark');
-            updateThemeUI();
-        });
-
-        // 3. Interactive C# Code Evolution Tab Switcher
-        let activeCodeMode = 'modular';
-
-        function switchCodeTab(mode) {
-            activeCodeMode = mode;
-            const modularPre = document.getElementById('code-modular');
-            const spaghettiPre = document.getElementById('code-spaghetti');
-            const tabModular = document.getElementById('tab-modular');
-            const tabSpaghetti = document.getElementById('tab-spaghetti');
-            const filenameEl = document.getElementById('code-filename');
-
-            const activeClasses = ['bg-editorial-accent', 'text-white', 'dark:bg-editorial-slateAccent', 'dark:text-editorial-slate'];
-            const inactiveClasses = ['text-editorial-muted', 'dark:text-editorial-slateMuted', 'hover:text-editorial-ink', 'dark:hover:text-editorial-slateInk'];
-
-            if (mode === 'modular') {
-                modularPre.classList.remove('hidden');
-                spaghettiPre.classList.add('hidden');
-                tabModular.classList.add(...activeClasses);
-                tabModular.classList.remove(...inactiveClasses);
-                tabSpaghetti.classList.remove(...activeClasses);
-                tabSpaghetti.classList.add(...inactiveClasses);
-                filenameEl.textContent = 'StealthAudioSystem.cs — Pendekatan Modular (Event & Interface)';
-            } else {
-                spaghettiPre.classList.remove('hidden');
-                modularPre.classList.add('hidden');
-                tabSpaghetti.classList.add(...activeClasses);
-                tabSpaghetti.classList.remove(...inactiveClasses);
-                tabModular.classList.remove(...activeClasses);
-                tabModular.classList.add(...inactiveClasses);
-                filenameEl.textContent = 'PlayerAllInOne.cs — Pendekatan Awal (Tightly Coupled)';
-            }
-        }
-
-        // 4. iFrame-Safe Clipboard Utilities
-        function showToast(message) {
-            const toast = document.getElementById('toast-banner');
-            toast.textContent = message;
-            toast.classList.remove('opacity-0');
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-            }, 2200);
-        }
-
-        function copyTextFallback(text) {
-            const temp = document.createElement('textarea');
-            temp.value = text;
-            temp.style.position = 'fixed';
-            temp.style.opacity = '0';
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-        }
-
-        function copyActiveCode(buttonEl) {
-            const targetId = activeCodeMode === 'modular' ? 'code-modular' : 'code-spaghetti';
-            const codeEl = document.getElementById(targetId);
-            if (!codeEl) return;
-
-            copyTextFallback(codeEl.innerText);
-            const originalText = buttonEl.textContent;
-            buttonEl.textContent = 'Tersalin!';
-            showToast('Cuplikan kode C# berhasil disalin');
-            setTimeout(() => {
-                buttonEl.textContent = originalText;
-            }, 1800);
-        }
-
-        function copyArticleLink() {
-            copyTextFallback(window.location.href);
-            showToast('Tautan artikel berhasil disalin');
-        }
-
-        // 5. Scroll Reveal & Active Sidebar TOC Highlight
-        const sections = document.querySelectorAll('section[id]');
-        const tocLinks = document.querySelectorAll('.toc-link');
-
-        const sectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    const id = entry.target.getAttribute('id');
-                    tocLinks.forEach(link => {
-                        link.classList.toggle('active', link.dataset.target === id);
-                    });
-                }
-            });
-        }, {
-            threshold: 0.15,
-            rootMargin: '-10% 0px -45% 0px'
-        });
-
-        sections.forEach(sec => sectionObserver.observe(sec));
-    </script>
 </body>
 </html>
